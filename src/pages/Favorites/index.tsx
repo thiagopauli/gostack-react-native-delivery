@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
 
+import { useNavigation } from '@react-navigation/native';
 import api from '../../services/api';
 import formatValue from '../../utils/formatValue';
 
@@ -28,11 +29,26 @@ interface Food {
 }
 
 const Favorites: React.FC = () => {
+  const { navigate } = useNavigation();
+
   const [favorites, setFavorites] = useState<Food[]>([]);
+
+  async function handleNavigate(id: number): Promise<void> {
+    navigate('FoodDetails', { id });
+  }
 
   useEffect(() => {
     async function loadFavorites(): Promise<void> {
-      // Load favorite foods from api
+      const { status, data } = await api.get('favorites');
+      if (status === 200) {
+        const favs = data.map((food: Omit<Food, 'formattedPrice'>) => {
+          if (food.price) {
+            return { ...food, formattedPrice: formatValue(food.price) };
+          }
+          return food;
+        });
+        setFavorites(favs);
+      }
     }
 
     loadFavorites();
@@ -49,12 +65,9 @@ const Favorites: React.FC = () => {
           data={favorites}
           keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (
-            <Food activeOpacity={0.6}>
+            <Food activeOpacity={0.6} onPress={() => handleNavigate(item.id)}>
               <FoodImageContainer>
-                <Image
-                  style={{ width: 88, height: 88 }}
-                  source={{ uri: item.thumbnail_url }}
-                />
+                <Image style={{ width: 88, height: 88 }} source={{ uri: item.thumbnail_url }} />
               </FoodImageContainer>
               <FoodContent>
                 <FoodTitle>{item.name}</FoodTitle>

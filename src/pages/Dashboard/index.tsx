@@ -46,20 +46,25 @@ interface Category {
 const Dashboard: React.FC = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<
-    number | undefined
-  >();
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
   const [searchValue, setSearchValue] = useState('');
 
-  const navigation = useNavigation();
+  const { navigate } = useNavigation();
 
   async function handleNavigate(id: number): Promise<void> {
-    // Navigate do ProductDetails page
+    navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // Load Foods from API
+      const res = await api.get<Food[]>('foods', {
+        params: {
+          name_like: searchValue,
+          category_like: selectedCategory,
+        },
+      });
+
+      setFoods(res.data);
     }
 
     loadFoods();
@@ -67,33 +72,27 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadCategories(): Promise<void> {
-      // Load categories from API
+      const res = await api.get('categories');
+      if (res.status === 200) {
+        setCategories(res.data);
+      }
     }
 
     loadCategories();
   }, []);
 
   function handleSelectCategory(id: number): void {
-    // Select / deselect category
+    setSelectedCategory(id === selectedCategory ? undefined : id);
   }
 
   return (
     <Container>
       <Header>
         <Image source={Logo} />
-        <Icon
-          name="log-out"
-          size={24}
-          color="#FFB84D"
-          onPress={() => navigation.navigate('Home')}
-        />
+        <Icon name="log-out" size={24} color="#FFB84D" onPress={() => navigate('Home')} />
       </Header>
       <FilterContainer>
-        <SearchInput
-          value={searchValue}
-          onChangeText={setSearchValue}
-          placeholder="Qual comida você procura?"
-        />
+        <SearchInput value={searchValue} onChangeText={setSearchValue} placeholder="Qual comida você procura?" />
       </FilterContainer>
       <ScrollView>
         <CategoryContainer>
@@ -113,10 +112,7 @@ const Dashboard: React.FC = () => {
                 activeOpacity={0.6}
                 testID={`category-${category.id}`}
               >
-                <Image
-                  style={{ width: 56, height: 56 }}
-                  source={{ uri: category.image_url }}
-                />
+                <Image style={{ width: 56, height: 56 }} source={{ uri: category.image_url }} />
                 <CategoryItemTitle>{category.title}</CategoryItemTitle>
               </CategoryItem>
             ))}
@@ -133,10 +129,7 @@ const Dashboard: React.FC = () => {
                 testID={`food-${food.id}`}
               >
                 <FoodImageContainer>
-                  <Image
-                    style={{ width: 88, height: 88 }}
-                    source={{ uri: food.thumbnail_url }}
-                  />
+                  <Image style={{ width: 88, height: 88 }} source={{ uri: food.thumbnail_url }} />
                 </FoodImageContainer>
                 <FoodContent>
                   <FoodTitle>{food.name}</FoodTitle>

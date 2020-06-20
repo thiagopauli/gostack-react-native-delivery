@@ -23,8 +23,31 @@ interface Food {
   name: string;
   description: string;
   price: number;
-  formattedValue: number;
+  formattedValue: string;
   thumbnail_url: string;
+}
+
+interface Extra {
+  id: number;
+  name: string;
+  value: number;
+  quantity: number;
+}
+
+interface ApiResponseData {
+  category: number;
+  description: string;
+  extras: Extra[];
+  id: number;
+  name: string;
+  price: number;
+  product_id: number;
+  thumbnail_url: string;
+}
+
+interface ApiResponse {
+  status: number;
+  data: ApiResponseData[];
 }
 
 const Orders: React.FC = () => {
@@ -32,7 +55,17 @@ const Orders: React.FC = () => {
 
   useEffect(() => {
     async function loadOrders(): Promise<void> {
-      // Load orders from API
+      const { status, data }: ApiResponse = await api.get('orders');
+      if (status === 200) {
+        const newOrders = data.map(order => {
+          const totalExtras = order.extras.reduce((total, extra) => {
+            return total + +extra.value * +extra.quantity;
+          }, 0);
+          const formattedValue = formatValue(+totalExtras + +order.price);
+          return { ...order, formattedValue };
+        });
+        setOrders(newOrders);
+      }
     }
 
     loadOrders();
@@ -51,15 +84,12 @@ const Orders: React.FC = () => {
           renderItem={({ item }) => (
             <Food key={item.id} activeOpacity={0.6}>
               <FoodImageContainer>
-                <Image
-                  style={{ width: 88, height: 88 }}
-                  source={{ uri: item.thumbnail_url }}
-                />
+                <Image style={{ width: 88, height: 88 }} source={{ uri: item.thumbnail_url }} />
               </FoodImageContainer>
               <FoodContent>
                 <FoodTitle>{item.name}</FoodTitle>
                 <FoodDescription>{item.description}</FoodDescription>
-                <FoodPricing>{item.formattedPrice}</FoodPricing>
+                <FoodPricing>{item.formattedValue}</FoodPricing>
               </FoodContent>
             </Food>
           )}

@@ -5,14 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import Icon from 'react-native-vector-icons/Feather';
 
-import {
-  Container,
-  BackgroundImage,
-  Title,
-  NavigationButton,
-  ButtonText,
-  IconContainer,
-} from './styles';
+import { Container, BackgroundImage, Title, NavigationButton, ButtonText, IconContainer } from './styles';
 
 import Background from '../../assets/home-background.png';
 import Logo from '../../assets/logo.png';
